@@ -8,6 +8,7 @@ use App\Models\Check;
 use App\Models\Monitor;
 use App\Services\UptimeCalculator;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class MonitorController extends Controller
@@ -39,6 +40,8 @@ class MonitorController extends Controller
     public function store(MonitorRequest $request): RedirectResponse
     {
         $monitor = Monitor::create($request->validated());
+
+        $this->forgetStatusPage();
 
         return redirect()
             ->route('monitors.show', $monitor)
@@ -90,6 +93,8 @@ class MonitorController extends Controller
 
         $monitor->save();
 
+        $this->forgetStatusPage();
+
         return redirect()
             ->route('monitors.show', $monitor)
             ->with('status', 'Monitor atualizado.');
@@ -99,6 +104,8 @@ class MonitorController extends Controller
     {
         // Os checks e incidentes são apagados junto (cascadeOnDelete na migration).
         $monitor->delete();
+
+        $this->forgetStatusPage();
 
         return redirect()
             ->route('monitors.index')
@@ -116,6 +123,17 @@ class MonitorController extends Controller
 
         $monitor->save();
 
+        $this->forgetStatusPage();
+
         return back()->with('status', $monitor->is_active ? 'Monitor retomado.' : 'Monitor pausado.');
+    }
+
+    /**
+     * A status page é cacheada por 60 s. Mudanças feitas pelo painel
+     * (público/privado, pausa, remoção) devem aparecer na hora.
+     */
+    private function forgetStatusPage(): void
+    {
+        Cache::forget(StatusPageController::CACHE_KEY);
     }
 }

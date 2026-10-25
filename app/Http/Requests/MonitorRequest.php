@@ -15,6 +15,15 @@ class MonitorRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Checkbox desmarcado não é enviado pelo navegador. Convertemos para
+     * true/false aqui, senão desmarcar "público" nunca teria efeito.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['is_public' => $this->boolean('is_public')]);
+    }
+
     public function rules(): array
     {
         return [
@@ -40,6 +49,7 @@ class MonitorRequest extends FormRequest
             'interval_minutes' => ['required', 'integer', 'between:1,1440'],
             // HEAD não devolve corpo, então não há onde procurar a palavra-chave.
             'keyword' => ['nullable', 'string', 'max:255', 'prohibited_if:method,HEAD'],
+            'is_public' => ['boolean'],
         ];
     }
 

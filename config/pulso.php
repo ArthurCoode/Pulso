@@ -27,6 +27,12 @@ return [
         'password' => env('PULSO_ADMIN_PASSWORD'),
     ],
 
+    // Textos da status page pública.
+    'status_page' => [
+        'title' => env('PULSO_STATUS_TITLE', 'Status dos serviços'),
+        'description' => env('PULSO_STATUS_DESCRIPTION', 'Situação atual e histórico de disponibilidade.'),
+    ],
+
     'alerts' => [
         'mail_to' => env('PULSO_ALERT_EMAIL'),
         'telegram_token' => env('PULSO_TELEGRAM_BOT_TOKEN'),

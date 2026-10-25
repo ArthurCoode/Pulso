@@ -51,3 +51,13 @@
     <div class="hint">Se preenchida, a página precisa conter este texto. Só funciona com o método GET.</div>
     @error('keyword')<small class="error">{{ $message }}</small>@enderror
 </div>
+
+<div class="field">
+    <label for="is_public">
+        <input id="is_public" name="is_public" type="checkbox" value="1" style="width:auto"
+               @checked(old('is_public', $monitor->is_public))>
+        Exibir na status page pública
+    </label>
+    <div class="hint">Aparecem só o nome e a disponibilidade. A URL e as mensagens de erro nunca são mostradas.</div>
+    @error('is_public')<small class="error">{{ $message }}</small>@enderror
+</div>

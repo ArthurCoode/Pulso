@@ -19,6 +19,7 @@ class Monitor extends Model
         'interval_minutes',
         'keyword',
         'is_active',
+        'is_public',
         'status',
         'consecutive_failures',
         'last_checked_at',
@@ -34,6 +35,7 @@ class Monitor extends Model
         'timeout' => 10,
         'interval_minutes' => 1,
         'is_active' => true,
+        'is_public' => false,
         'status' => 'unknown',
         'consecutive_failures' => 0,
     ];
@@ -43,6 +45,7 @@ class Monitor extends Model
         return [
             'status' => MonitorStatus::class,
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
             'last_checked_at' => 'datetime',
             'next_check_at' => 'datetime',
         ];
