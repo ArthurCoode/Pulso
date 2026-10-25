@@ -17,6 +17,10 @@ return [
     // a checagem já está velha e o Scheduler despacha uma nova em seguida.
     'max_job_age' => (int) env('PULSO_MAX_JOB_AGE', 120),
 
+    // Dias de checagens guardados. O comando monitors:prune nunca usa menos
+    // de 90, porque a status page mostra 90 dias.
+    'retention_days' => (int) env('PULSO_RETENTION_DAYS', 120),
+
     // Fuso usado apenas para EXIBIR datas. O banco continua em UTC.
     'display_timezone' => env('PULSO_TIMEZONE', 'America/Bahia'),
 

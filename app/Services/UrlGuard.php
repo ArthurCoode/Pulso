@@ -11,23 +11,42 @@ class UrlGuard
      */
     public function assertSafe(string $url): void
     {
+        $this->resolveSafe($url);
+    }
+
+    /**
+     * Valida a URL e devolve onde conectar.
+     *
+     * 'ips' traz os endereços JÁ VALIDADOS para o cliente HTTP fixar na conexão
+     * (impede DNS rebinding). Fica vazio quando não há o que fixar: o host já é
+     * um IP literal, ou as checagens estão liberadas por configuração.
+     *
+     * @return array{host: string, port: int, ips: list<string>}
+     */
+    public function resolveSafe(string $url): array
+    {
         $parts = parse_url($url);
 
         if ($parts === false || ! isset($parts['scheme'], $parts['host'])) {
             throw new UnsafeUrlException('URL inválida.');
         }
 
-        if (! in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
+        $scheme = strtolower($parts['scheme']);
+
+        if (! in_array($scheme, ['http', 'https'], true)) {
             throw new UnsafeUrlException('Apenas URLs http e https são permitidas.');
         }
 
+        $host = trim($parts['host'], '[]');
+        $port = $parts['port'] ?? ($scheme === 'https' ? 443 : 80);
+
         if (config('pulso.allow_private_hosts')) {
-            return;
+            return ['host' => $host, 'port' => $port, 'ips' => []];
         }
 
-        $host = trim($parts['host'], '[]');
+        $isLiteral = filter_var($host, FILTER_VALIDATE_IP) !== false;
 
-        $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : $this->resolve($host);
+        $ips = $isLiteral ? [$host] : $this->resolve($host);
 
         if ($ips === []) {
             throw new UnsafeUrlException("Não foi possível resolver o host {$host}.");
@@ -38,6 +57,8 @@ class UrlGuard
                 throw new UnsafeUrlException("O host {$host} aponta para um endereço não permitido ({$ip}).");
             }
         }
+
+        return ['host' => $host, 'port' => $port, 'ips' => $isLiteral ? [] : $ips];
     }
 
     /**
@@ -65,10 +86,30 @@ class UrlGuard
 
     private function isPublic(string $ip): bool
     {
-        return filter_var(
+        // IPv4 embutido em IPv6 (::ffff:127.0.0.1): avalia o IPv4 de dentro.
+        if (preg_match('/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i', $ip, $matches)) {
+            $ip = $matches[1];
+        }
+
+        $valid = filter_var(
             $ip,
             FILTER_VALIDATE_IP,
             FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) !== false;
+        );
+
+        if ($valid === false) {
+            return false;
+        }
+
+        // 100.64.0.0/10 (CGNAT): o PHP não trata como privada, mas é rede interna.
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+            $long = ip2long($ip);
+
+            if ($long >= ip2long('100.64.0.0') && $long <= ip2long('100.127.255.255')) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

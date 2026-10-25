@@ -9,3 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('monitors:dispatch')->everyMinute()->withoutOverlapping();
+
+// Limpeza diária, de madrugada, quando há menos movimento.
+Schedule::command('monitors:prune')->dailyAt('03:30')->withoutOverlapping();
