@@ -239,16 +239,6 @@ Um resumo do que muda fora do seu computador:
 
 5. **Depois de cada atualização:** `php artisan migrate --force`, `php artisan config:cache` e reinicie os workers (`php artisan queue:restart`), porque eles só carregam o código ao iniciar.
 
-## Roadmap
-
-- [ ] Multiusuário, com login e monitores por conta
-- [ ] Canais de alerta por monitor (webhook, Slack, Discord)
-- [ ] Checagens TCP e ping, além de HTTP
-- [ ] Verificação de validade do certificado SSL, com aviso antes de expirar
-- [ ] Janelas de manutenção programadas
-- [ ] Gráfico de latência de 7 e 30 dias
-- [ ] Verificação a partir de mais de uma região
-
 ## O que este projeto exercita
 
 Scheduler e filas do Laravel, Eloquent (relações, escopos, casts e enums), Form Requests com regras personalizadas, camada de serviços, cache e rate limiting, defesa contra SSRF e DNS rebinding, e testes com `Http::fake()` e Mockery.
