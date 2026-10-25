@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Check;
 use App\Models\Monitor;
+use App\Services\IncidentManager;
 use App\Services\MonitorChecker;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -18,12 +19,26 @@ class RunMonitorCheck implements ShouldQueue
 
     public int $timeout = 30;
 
+    // Momento do despacho (timestamp). Declarada fora do construtor, com valor
+    // padrão, para que Jobs antigos já gravados na fila (sem esse campo)
+    // continuem sendo lidos sem erro.
+    public ?int $dispatchedAt = null;
+
     public function __construct(public int $monitorId)
     {
+        $this->dispatchedAt = now()->timestamp;
     }
 
-    public function handle(MonitorChecker $checker): void
+    public function handle(MonitorChecker $checker, IncidentManager $incidents): void
     {
+        // Descarta checagens que ficaram paradas na fila (worker desligado ou
+        // sobrecarregado). Sem isso, um backlog processado de uma vez contaria
+        // várias "falhas seguidas" em poucos segundos e geraria alarme falso.
+        if ($this->dispatchedAt !== null
+            && now()->timestamp - $this->dispatchedAt > config('pulso.max_job_age')) {
+            return;
+        }
+
         $monitor = Monitor::find($this->monitorId);
 
         // O monitor pode ter sido apagado ou pausado entre o despacho e a execução.
@@ -43,6 +58,10 @@ class RunMonitorCheck implements ShouldQueue
             'checked_at' => $checkedAt,
         ]);
 
-        $monitor->update(['last_checked_at' => $checkedAt]);
+        $monitor->last_checked_at = $checkedAt;
+
+        // Decide o novo estado (up/down), abre/fecha incidente e avisa.
+        // O apply() salva o monitor, incluindo o last_checked_at acima.
+        $incidents->apply($monitor, $result);
     }
 }
