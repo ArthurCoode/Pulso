@@ -2,19 +2,34 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Signature;
+use App\Jobs\RunMonitorCheck;
+use App\Models\Monitor;
 use Illuminate\Console\Command;
 
-#[Signature('app:dispatch-due-checks')]
-#[Description('Command description')]
 class DispatchDueChecks extends Command
 {
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    protected $signature = 'monitors:dispatch';
+
+    protected $description = 'Despacha a checagem dos monitores cujo horário já venceu';
+
+    public function handle(): int
     {
-        //
+        // get() em vez de each()/chunk(): estamos alterando next_check_at,
+        // a mesma coluna do filtro, e o chunk pularia registros.
+        $monitors = Monitor::due()->get();
+
+        foreach ($monitors as $monitor) {
+            // "Reserva" o monitor ANTES de despachar. Se a fila estiver lenta,
+            // o próximo minuto não despacha o mesmo monitor de novo.
+            $monitor->update([
+                'next_check_at' => now()->addMinutes($monitor->interval_minutes),
+            ]);
+
+            RunMonitorCheck::dispatch($monitor->id);
+        }
+
+        $this->info("{$monitors->count()} monitor(es) despachado(s).");
+
+        return self::SUCCESS;
     }
 }
