@@ -64,6 +64,14 @@ class Monitor extends Model
     }
 
     /**
+     * A checagem mais recente (o id cresce com o tempo, então o maior é o último).
+     */
+    public function latestCheck(): HasOne
+    {
+        return $this->hasOne(Check::class)->latestOfMany('id');
+    }
+
+    /**
      * Monitores ativos cuja próxima checagem já venceu (ou nunca rodou).
      */
     public function scopeDue(Builder $query): Builder

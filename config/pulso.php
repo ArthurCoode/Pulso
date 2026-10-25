@@ -17,6 +17,16 @@ return [
     // a checagem já está velha e o Scheduler despacha uma nova em seguida.
     'max_job_age' => (int) env('PULSO_MAX_JOB_AGE', 120),
 
+    // Fuso usado apenas para EXIBIR datas. O banco continua em UTC.
+    'display_timezone' => env('PULSO_TIMEZONE', 'America/Bahia'),
+
+    // Proteção do painel (HTTP Basic). Se vazio: liberado em ambiente local,
+    // bloqueado em qualquer outro ambiente.
+    'admin' => [
+        'user' => env('PULSO_ADMIN_USER'),
+        'password' => env('PULSO_ADMIN_PASSWORD'),
+    ],
+
     'alerts' => [
         'mail_to' => env('PULSO_ALERT_EMAIL'),
         'telegram_token' => env('PULSO_TELEGRAM_BOT_TOKEN'),
