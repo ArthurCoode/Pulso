@@ -3,7 +3,13 @@
 @section('title', 'Novo monitor · Pulso')
 
 @section('content')
-    <div class="head"><h1>Novo monitor</h1></div>
+    <div class="page-head">
+        <div>
+            <a class="back" href="{{ route('monitors.index') }}">Todos os monitores</a>
+            <h1>Novo monitor</h1>
+            <div class="muted">A primeira checagem acontece em até 1 minuto depois de salvar.</div>
+        </div>
+    </div>
 
     <div class="card">
         <form class="monitor-form" method="POST" action="{{ route('monitors.store') }}">

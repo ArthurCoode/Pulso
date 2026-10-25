@@ -57,4 +57,46 @@ class UptimeCalculator
 
         return $avg === null ? null : (int) round($avg);
     }
+
+    /**
+     * As últimas checagens de cada monitor, prontas para desenhar o "traço"
+     * da listagem. Uma consulta só para todos os monitores.
+     *
+     * Cada item tem 'ok' (deu certo?) e 'height' (porcentagem de 30 a 100):
+     * checagens bem-sucedidas crescem com o tempo de resposta, falhas
+     * ocupam a altura toda.
+     *
+     * @param  list<int>  $monitorIds
+     * @return array<int, list<array{ok: bool, height: int}>>
+     */
+    public function recentTicksForAll(array $monitorIds, int $limit = 30, int $withinHours = 3): array
+    {
+        if ($monitorIds === []) {
+            return [];
+        }
+
+        $rows = Check::query()
+            ->whereIn('monitor_id', $monitorIds)
+            ->where('checked_at', '>=', now()->subHours($withinHours))
+            ->orderBy('id')
+            ->get(['monitor_id', 'is_successful', 'response_time_ms']);
+
+        $ticks = [];
+
+        foreach ($rows->groupBy('monitor_id') as $monitorId => $checks) {
+            $recent = $checks->slice(-$limit)->values();
+
+            // Maior tempo entre as bem-sucedidas: é a régua do traço deste monitor.
+            $max = max(1, (int) $recent->where('is_successful', true)->max('response_time_ms'));
+
+            $ticks[$monitorId] = $recent->map(fn ($check) => [
+                'ok' => (bool) $check->is_successful,
+                'height' => $check->is_successful
+                    ? (int) round(30 + 70 * min(1, ((int) $check->response_time_ms) / $max))
+                    : 100,
+            ])->all();
+        }
+
+        return $ticks;
+    }
 }

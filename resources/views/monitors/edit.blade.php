@@ -3,7 +3,13 @@
 @section('title', 'Editar '.$monitor->name.' · Pulso')
 
 @section('content')
-    <div class="head"><h1>Editar monitor</h1></div>
+    <div class="page-head">
+        <div>
+            <a class="back" href="{{ route('monitors.show', $monitor) }}">Voltar para {{ $monitor->name }}</a>
+            <h1>Editar monitor</h1>
+            <div class="muted">Se você mudar a URL, o histórico de estado recomeça e um incidente aberto é encerrado.</div>
+        </div>
+    </div>
 
     <div class="card">
         <form class="monitor-form" method="POST" action="{{ route('monitors.update', $monitor) }}">

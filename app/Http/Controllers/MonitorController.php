@@ -28,6 +28,7 @@ class MonitorController extends Controller
             'monitors' => $monitors,
             'summary' => $summary,
             'uptime' => $uptime->percentagesForAll(24),
+            'ticks' => $uptime->recentTicksForAll($monitors->pluck('id')->all()),
         ]);
     }
 

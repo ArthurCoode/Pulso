@@ -1,10 +1,10 @@
 @php
     if (! $monitor->is_active) {
-        $badgeClass = 'paused';
-        $badgeLabel = 'Pausado';
+        $stateClass = 's-paused';
+        $stateLabel = 'Pausado';
     } else {
-        $badgeClass = $monitor->status->value;
-        $badgeLabel = $monitor->status->label();
+        $stateClass = 's-'.$monitor->status->value;
+        $stateLabel = $monitor->status->label();
     }
 @endphp
-<span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+<span class="chip {{ $stateClass }}"><i class="dot"></i>{{ $stateLabel }}</span>
